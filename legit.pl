@@ -95,7 +95,6 @@ sub initLegit{
 		exit(1);
 	}
 
-
 	#Create the .legit folder
 	mkdir($ROOT_FOLDER) or die "Unable to create .legit folder";
 
@@ -108,6 +107,10 @@ sub initLegit{
 
 	mkdir("$LOGS_FOLDER/$REFS_FOLDER");
 	mkdir("$LOGS_FOLDER/$HEADS_FOLDER");
+
+
+	#Print success message
+	printf "Initialized empty legit repository in .legit\n";
 
 
 }
