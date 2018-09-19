@@ -11,7 +11,7 @@ Comments: I spent this time planning out how I would represent the internal stru
 ##################
 Date: 19/09/2018
 Start: 22.30
-End:
+End: 02:00
 Activity: Coding - Subset 0
-Comments: I began to implement my solution that follows what is required for Subset 0. I created a way of checking the inputs are valid, implemented the Init Command and began working on the Add Command.
+Comments: I began to implement my solution that follows what is required for Subset 0. I created a way of checking the inputs are valid, implemented the Init Command and also the add command.
 ##################
