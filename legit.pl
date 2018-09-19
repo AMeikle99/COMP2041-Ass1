@@ -168,7 +168,6 @@ sub addLegit{
 
 	#Copies each of the listed files into the index folder
 	foreach my $file(@files){
-		printf "Adding $file to index...\n";
 		copy($file, ".legit/index/$file");
 	}
 }
