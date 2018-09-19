@@ -91,7 +91,7 @@ sub initLegit{
 	#Check if the .legit folder already exists
 	#Exits with error message if it does
 	if(-d $ROOT_FOLDER){
-		printf "$0: error: .legit already exists\n";
+		printf "legit.pl: error: .legit already exists\n";
 		exit(1);
 	}
 
