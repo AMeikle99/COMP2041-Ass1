@@ -18,7 +18,7 @@ our $SNAPSHOT_FILE = ".S";
 our $WORKING_DIRECTORY = getcwd();
 
 ######################
-printf "$WORKING_DIRECTORY\n";
+
 main();
 
 ######################
@@ -31,10 +31,12 @@ sub main{
 	#Parse the command arguments and check they are valid
 	validateArguments(@ARGV);
 
-	if($args[0] eq"init"){
+	if($args[0] eq "init"){
 		initLegit(@args);
 	}
 
+
+	exit(0);
 
 }
 
@@ -106,9 +108,6 @@ sub initLegit{
 
 	mkdir("$LOGS_FOLDER/$REFS_FOLDER");
 	mkdir("$LOGS_FOLDER/$HEADS_FOLDER");
-
-
-
 
 
 }
