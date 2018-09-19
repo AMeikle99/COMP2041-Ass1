@@ -46,7 +46,7 @@ sub main{
 	}
 
 
-	changedFiles();
+	#changedFiles();
 
 	exit(0);
 
