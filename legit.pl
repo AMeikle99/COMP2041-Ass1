@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Cwd;
 
 
 #Global Variables that can be accessed by all routines
@@ -14,8 +15,10 @@ our $HEADS_FOLDER = "refs/heads";
 
 our $SNAPSHOT_FILE = ".S";
 
-######################
+our $WORKING_DIRECTORY = getcwd();
 
+######################
+printf "$WORKING_DIRECTORY\n";
 main();
 
 ######################
@@ -90,12 +93,22 @@ sub initLegit{
 		exit(1);
 	}
 
+
 	#Create the .legit folder
 	mkdir($ROOT_FOLDER) or die "Unable to create .legit folder";
 
-	#Create all the subdirectories and info files
+	#Create all the subdirectories
 	chdir($ROOT_FOLDER);
-	mkdir()
+	mkdir($LOGS_FOLDER);
+	mkdir($SNAPSHOT_FOLDER);
+	mkdir($REFS_FOLDER);
+	mkdir($HEADS_FOLDER);
+
+	mkdir("$LOGS_FOLDER/$REFS_FOLDER");
+	mkdir("$LOGS_FOLDER/$HEADS_FOLDER");
+
+
+
 
 
 }
