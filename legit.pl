@@ -87,6 +87,12 @@ sub validateArguments{
 					}
 				}
 			}
+		}elsif($args[0] eq "commit"){
+			if($#args < 2){
+				printf
+			}
+		}
+
 		}else{
 			print STDERR "legit.pl: error: unknown command $args[0]\n";
 			displayOptionsList();
