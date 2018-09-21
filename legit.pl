@@ -274,6 +274,9 @@ sub commitLegit{
 	}
 }
 
+#This reads in the commit history file and displays it in order from newest to oldest (i.e reversed on how it's stored)
+
+
 #Copies all files in the index to a new snapshot folder
 sub createSnapshot{
 	my @files = @_;
