@@ -54,6 +54,8 @@ sub main{
 			commitLegit(@args);
 		}elsif($args[0] eq "log"){
 			logLegit();
+		}elsif($args[0] eq "show"){
+			showLegit(@args);
 		}
 	}
 
@@ -111,7 +113,15 @@ sub validateArguments{
 			}
 		}elsif($args[0] eq "log"){
 			if($#args >0){
-				printf STDERR "sage: legit.pl log\n";
+				printf STDERR "usage: legit.pl log\n";
+				exit(1);
+			}
+		}elsif($args[0] eq "show"){
+			if($#args != 1){
+				printf STDERR "usage: legit.pl <commit>:<filename>\n";
+				exit(1);
+			}elsif($args[1] !~ /:/){
+				printf STDERR "legit.pl: error: invalid object $args[1]\n";
 				exit(1);
 			}
 		}else{
@@ -307,6 +317,66 @@ sub logLegit{
 	foreach my $commit(reverse sort keys %COMMIT_HISTORY){
 		printf "$commit $COMMIT_HISTORY{$commit}\n";
 	}
+
+}
+
+sub showLegit{
+	my @args = @_;
+	my $filePath = "";
+
+	#Split apart the <commit>:<filename> argument
+	my $arg2 = $args[1];
+	$arg2 =~ /(.*):(.*)/;
+	my $commitName = $1;
+	my $filename = $2;
+
+	#Check all cases of invalid input
+	#Where no commit is given
+	if($commitName eq ""){
+		#Check the filename supplied is valid
+		if(($filename eq "") || ($filename !~ /^[a-zA-Z0-9]/)){
+			printf STDERR "legit.pl: error: invalid filename '$filename'\n";
+			exit(1);
+		#Check that the file exists in index
+		}else{
+			if(!(-e "$ROOT_FOLDER/$INDEX_FOLDER/$filename")){
+				printf STDERR "legit.pl: error: '$filename' not found in index\n";
+				exit(1);
+			#File does exist so set filepath of file to open
+			}else{
+				$filePath = "$ROOT_FOLDER/$INDEX_FOLDER/$filename";
+			}
+		}
+	#A commit number is supplied
+	}else{
+		#Check the commit number is valid
+		if($commitName > $MAX_COMMIT){
+			printf STDERR "legit.pl: error: unknown commit '$commitName'\n";
+			exit(1);
+		#Commit number is valid
+		}else{
+			#Checks the filename supplied is valid
+			if(($filename eq "") || ($filename !~ /^[a-zA-Z0-9]/)){
+				printf STDERR "legit.pl: error: invalid filename '$filename'\n";
+				exit(1);
+			#Check the file exists in the commit
+			}else{
+				if(!(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/.S$commitName/$filename")){
+				printf STDERR "legit.pl: error: '$filename' not found in commit $commitName\n";
+				exit(1);
+				#File does exist so set the filepath of file to open
+				}else{
+					$filePath = "$ROOT_FOLDER/$SNAPSHOT_FOLDER/.S$commitName/$filename";
+				}
+			}
+		}
+	}
+
+	#Display the file
+	open F, "<", $filePath or die "Unable to open file. Exiting";
+	printf $_  while(<F>);
+	close F;
+
 
 }
 
