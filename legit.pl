@@ -21,6 +21,7 @@ our $CURRENT_BRANCH;
 our $CURRENT_SNAPSHOT;
 
 our $MAX_COMMIT;
+our %COMMIT_HISTORY;
 
 ######################
 
@@ -39,11 +40,21 @@ sub main{
 
 	if($args[0] eq "init"){
 		initLegit(@args);
-	}elsif($args[0] eq "add"){
-		shift @args;
-		addLegit(@args);
-	}elsif($args[0] eq "commit"){
-		commitLegit(@args);
+	}else{
+		#Checks that the .legit folder is actually present
+		if(!(-d ".legit")){
+			printf STDERR "legit.pl: error: no .legit directory containing legit repository exists\n";
+			exit(1);
+		}
+
+		if($args[0] eq "add"){
+			shift @args;
+			addLegit(@args);
+		}elsif($args[0] eq "commit"){
+			commitLegit(@args);
+		}elsif($args[0] eq "log"){
+			logLegit();
+		}
 	}
 
 
@@ -97,6 +108,11 @@ sub validateArguments{
 					printf STDERR "usage: legit.pl -m commit-message\n";
 					exit(1);
 				}
+			}
+		}elsif($args[0] eq "log"){
+			if($#args >0){
+				printf STDERR "sage: legit.pl log\n";
+				exit(1);
 			}
 		}else{
 			print STDERR "legit.pl: error: unknown command $args[0]\n";
@@ -163,12 +179,6 @@ sub initLegit{
 #Deals with adding a copy of the files to the temporary index folder
 sub addLegit{
 	my @files = @_;
-
-	#Checks that the .legit folder is actually present
-	if(!(-d ".legit")){
-		printf STDERR "legit.pl: error: no .legit directory containing legit repository exists\n";
-		exit(1);
-	}
 
 	#Copies each of the listed files into the index folder
 	foreach my $file(@files){
@@ -275,7 +285,30 @@ sub commitLegit{
 }
 
 #This reads in the commit history file and displays it in order from newest to oldest (i.e reversed on how it's stored)
+sub logLegit{
 
+	#If there are no commits yet, print error message
+	if(!(-e "$ROOT_FOLDER/COMMIT_HISTORY")){
+		printf STDERR "legit.pl: error: your repository does not have any commits yet\n";
+		exit(1);
+	}
+
+	#Open the COMMIT_HISTORY file and read in the contents to the global hash
+	open F, "<", "$ROOT_FOLDER/COMMIT_HISTORY" or die "Error finding the commit history file";
+	while(my $line = <F>){
+		$line =~ /([0-9]+)\s(.+)/;
+		my $commit = $1;
+		my $message = $2;
+		$COMMIT_HISTORY{$commit} = $2;
+	}
+	close F;
+
+	#Print out each commit message, newest first
+	foreach my $commit(reverse sort keys %COMMIT_HISTORY){
+		printf "$commit $COMMIT_HISTORY{$commit}\n";
+	}
+
+}
 
 #Copies all files in the index to a new snapshot folder
 sub createSnapshot{
