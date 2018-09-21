@@ -223,7 +223,7 @@ sub commitLegit{
 			close F;
 
 			#Save the current commit to the snapshot folder
-			printf "Commited as commit $MAX_COMMIT\n";
+			printf "Committed as commit $MAX_COMMIT\n";
 			createSnapshot(@allFiles);
 			exit(0);
 		#Otherwise this will be a subsequent commit (1,2,3...etc)	
@@ -240,7 +240,7 @@ sub commitLegit{
 			$MAX_COMMIT += 1;
 			$CURRENT_SNAPSHOT =~ s/([0-9]+)/$MAX_COMMIT/;
 
-			printf "Commited as commit $MAX_COMMIT\n";
+			printf "Committed as commit $MAX_COMMIT\n";
 			createSnapshot(@allFiles);
 			
 			#Update all helper files
