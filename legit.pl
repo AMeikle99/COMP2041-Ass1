@@ -446,7 +446,7 @@ sub statusLegit{
 			printf "$file is Untracked\n";
 			$allFiles{$file} = 0;
 		#Check for options 1-5
-		}elsif((-e $file && -e "$ROOT_FOLDER/$INDEX_FOLDER/$file"){
+		}elsif(-e $file && -e "$ROOT_FOLDER/$INDEX_FOLDER/$file"){
 			#Check for option 1 - added to index
 			if(!(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
 				printf "$file: Added to Index\n";
@@ -457,6 +457,14 @@ sub statusLegit{
 				if((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file") == 0) && compare("$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")==0){
 					printf "$file: Same as repo\n";
 					$allFiles{$file} = 2;
+				#Option 3 - Changed, not staged (CWD file is different to index, but index hasn't changed from last commit)
+				}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")!=0) && (compare("$file", "ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
+					printf "$file: changed but not staged\n";
+					$allFiles{$file} = 3;
+				#Option 4 - Changed and Staged
+				}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")==0) && (compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
+					printf "$file: changed and staged\n";
+					$allFiles{$file} = 4;
 				}
 			}
 

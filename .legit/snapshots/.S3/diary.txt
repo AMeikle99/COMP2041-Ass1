@@ -21,9 +21,3 @@ End: 20:50
 Activity: Coding - Subset 0 (Commit/Log/Show)
 Comments: Following on from where I left off I have successfully implemented a basic version of commit (not Subset 1 standard yet). I can see myself updating how this function works when it comes to implementing merge/checkout etc. Inorder to store files correctly. I was also able to complete the show functionality. This allowed to me to employ use of REGEX when determining if filenames were valid, the arguments were of the correct format.
 ##################
-Date: 02/10/2018
-Start: 22.25
-End: 01:20
-Activity: Coding - Subset 1 (Commit/Status)
-Comments: This session I focussed on implementing the commit function with -a flag enabled. I found this task to be relatively straightforward and simple to implement. The status function is currently in development, it is proving more challenging as i require to identify which situations would lead to which status message, such as changed not staged or same as repo.
-##################
