@@ -56,6 +56,8 @@ sub main{
 			logLegit();
 		}elsif($args[0] eq "show"){
 			showLegit(@args);
+		}elsif($args[0] eq "status"){
+			statusLegit();
 		}
 	}
 
@@ -110,6 +112,11 @@ sub validateArguments{
 					printf STDERR "usage: legit.pl -m commit-message\n";
 					exit(1);
 				}
+			}elsif($#args == 3){
+				if($args[1] ne "-a" && $args[2] ne "-m"){
+					printf STDERR "usage: legit.pl -m commit-message\n";
+					exit(1);
+				}
 			}
 		}elsif($args[0] eq "log"){
 			if($#args >0){
@@ -118,12 +125,14 @@ sub validateArguments{
 			}
 		}elsif($args[0] eq "show"){
 			if($#args != 1){
-				printf STDERR "usage: legit.pl <commit>:<filename>\n";
+				printf STDERR "usage: legit.pl show <commit>:<filename>\n";
 				exit(1);
 			}elsif($args[1] !~ /:/){
 				printf STDERR "legit.pl: error: invalid object $args[1]\n";
 				exit(1);
 			}
+		}elsif($args[0] eq "status" && $#args == 0){
+			##Do Nothing##
 		}else{
 			print STDERR "legit.pl: error: unknown command $args[0]\n";
 			displayOptionsList();
@@ -203,95 +212,105 @@ sub commitLegit{
 
 	my $commitMessage = $args[$#args];
 
-	#Just the -m and message are specified
-	if($#args == 2){
-		#Checks if this is the first commit (deleting the COMMIT_HISTORY will mess with the numbering though)
-		if(!(-e "$ROOT_FOLDER/COMMIT_HISTORY")){
-			my @allFiles = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
-			if(!($#allFiles >= 0)){
-				printf "nothing to commit\n";
-				exit(0);
-			}
-
-			#Initialize globals
-			$MAX_COMMIT = 0;
-			$CURRENT_SNAPSHOT = ".S0";
-			$CURRENT_BRANCH = "master";
-			#Create all helper files
-			open F, ">", "$ROOT_FOLDER/COMMIT_HISTORY" or die "Error initializing commit files";
-			printf F "$MAX_COMMIT $commitMessage\n";
-			close F;
-
-			open F, ">", "$ROOT_FOLDER/COMMIT_MSG" or die "Error initializing commit files";
-			printf F "$MAX_COMMIT $commitMessage\n";
-			close F;
-
-			open F, ">", "$ROOT_FOLDER/CURRENT_BRANCH" or die "Error initializing commit files";
-			printf F "$CURRENT_BRANCH\n";
-			close F;
-
-			open F, ">", "$ROOT_FOLDER/$LOGS_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error initalizing commit files";
-			printf F "commit (initial): $MAX_COMMIT $commitMessage\n";
-			close F;
-
-			open F, ">", "$ROOT_FOLDER/$LOGS_FOLDER/HISTORY" or die "Error initializing commit files";
-			printf F "$CURRENT_BRANCH: commit (initial commit): $MAX_COMMIT $commitMessage\n";
-			close F;
-
-			open F, ">", "$ROOT_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error initializing commit files";
-			printf F "snapshot: $CURRENT_SNAPSHOT\n";
-			close F;
-
-			#Save the current commit to the snapshot folder
-			printf "Committed as commit $MAX_COMMIT\n";
-			createSnapshot(@allFiles);
-			exit(0);
-		#Otherwise this will be a subsequent commit (1,2,3...etc)	
-		}else{
-			#Get a list of all the files in the index folder
-			my @allFiles = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
-			#Check that at least one file in the index is different from the most recent snapshot
-			if(!commitCheckIndexFiles()){
-				printf "nothing to commit\n";
-				exit(0);
-			}
-
-			#Update globals
-			$MAX_COMMIT += 1;
-			$CURRENT_SNAPSHOT =~ s/([0-9]+)/$MAX_COMMIT/;
-
-			printf "Committed as commit $MAX_COMMIT\n";
-			createSnapshot(@allFiles);
-			
-			#Update all helper files
-			#Updates the commit history file
-			open F, ">>", "$ROOT_FOLDER/COMMIT_HISTORY" or die "Error reading commit files";
-			printf F "$MAX_COMMIT $commitMessage\n";
-			close F;
-
-			#Stores the most recent Commit message
-			open F, ">", "$ROOT_FOLDER/COMMIT_MSG" or die "Error reading commit files";
-			printf F "$MAX_COMMIT $commitMessage\n";
-			close F;
-
-			#Updates the log file for the current branch
-			open F, ">>", "$ROOT_FOLDER/$LOGS_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error reading commit files";
-			printf F "commit: $MAX_COMMIT $commitMessage\n";
-			close F;
-
-			#Updates the whole repository history
-			open F, ">>", "$ROOT_FOLDER/$LOGS_FOLDER/HISTORY" or die "Error reading commit files";
-			printf F "$CURRENT_BRANCH: commit: $MAX_COMMIT $commitMessage\n";
-			close F;
-
-			#Stores the current most recent snapshot for the current branch
-			open F, ">", "$ROOT_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error reading commit files";
-			printf F "snapshot: $CURRENT_SNAPSHOT\n";
-			close F;
-
-			exit(0);
+	#If -a is specified then copy all the files into the index
+	if($args[1] eq "-a"){
+		#Get a list of index files and copy the corresponding ones from the Working Directory
+		my @files = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
+		foreach my $file(@files){
+			$file =~ /\/([a-zA-Z0-9_.\-]+)$/;
+			my $fileName = $1;
+			copy($fileName, "$file");
 		}
 	}
+
+
+	#Checks if this is the first commit (deleting the COMMIT_HISTORY will mess with the numbering though)
+	if(!(-e "$ROOT_FOLDER/COMMIT_HISTORY")){
+		my @allFiles = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
+		if(!($#allFiles >= 0)){
+			printf "nothing to commit\n";
+			exit(0);
+		}
+
+		#Initialize globals
+		$MAX_COMMIT = 0;
+		$CURRENT_SNAPSHOT = ".S0";
+		$CURRENT_BRANCH = "master";
+		#Create all helper files
+		open F, ">", "$ROOT_FOLDER/COMMIT_HISTORY" or die "Error initializing commit files";
+		printf F "$MAX_COMMIT $commitMessage\n";
+		close F;
+
+		open F, ">", "$ROOT_FOLDER/COMMIT_MSG" or die "Error initializing commit files";
+		printf F "$MAX_COMMIT $commitMessage\n";
+		close F;
+
+		open F, ">", "$ROOT_FOLDER/CURRENT_BRANCH" or die "Error initializing commit files";
+		printf F "$CURRENT_BRANCH\n";
+		close F;
+
+		open F, ">", "$ROOT_FOLDER/$LOGS_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error initalizing commit files";
+		printf F "commit (initial): $MAX_COMMIT $commitMessage\n";
+		close F;
+
+		open F, ">", "$ROOT_FOLDER/$LOGS_FOLDER/HISTORY" or die "Error initializing commit files";
+		printf F "$CURRENT_BRANCH: commit (initial commit): $MAX_COMMIT $commitMessage\n";
+		close F;
+
+		open F, ">", "$ROOT_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error initializing commit files";
+		printf F "snapshot: $CURRENT_SNAPSHOT\n";
+		close F;
+
+		#Save the current commit to the snapshot folder
+		printf "Committed as commit $MAX_COMMIT\n";
+		createSnapshot(@allFiles);
+		exit(0);
+	#Otherwise this will be a subsequent commit (1,2,3...etc)	
+	}else{
+		#Get a list of all the files in the index folder
+		my @allFiles = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
+		#Check that at least one file in the index is different from the most recent snapshot
+		if(!commitCheckIndexFiles()){
+			printf "nothing to commit\n";
+			exit(0);
+		}
+
+		#Update globals
+		$MAX_COMMIT += 1;
+		$CURRENT_SNAPSHOT =~ s/([0-9]+)/$MAX_COMMIT/;
+
+		printf "Committed as commit $MAX_COMMIT\n";
+		createSnapshot(@allFiles);
+		
+		#Update all helper files
+		#Updates the commit history file
+		open F, ">>", "$ROOT_FOLDER/COMMIT_HISTORY" or die "Error reading commit files";
+		printf F "$MAX_COMMIT $commitMessage\n";
+		close F;
+
+		#Stores the most recent Commit message
+		open F, ">", "$ROOT_FOLDER/COMMIT_MSG" or die "Error reading commit files";
+		printf F "$MAX_COMMIT $commitMessage\n";
+		close F;
+
+		#Updates the log file for the current branch
+		open F, ">>", "$ROOT_FOLDER/$LOGS_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error reading commit files";
+		printf F "commit: $MAX_COMMIT $commitMessage\n";
+		close F;
+
+		#Updates the whole repository history
+		open F, ">>", "$ROOT_FOLDER/$LOGS_FOLDER/HISTORY" or die "Error reading commit files";
+		printf F "$CURRENT_BRANCH: commit: $MAX_COMMIT $commitMessage\n";
+		close F;
+
+		#Stores the current most recent snapshot for the current branch
+		open F, ">", "$ROOT_FOLDER/$HEADS_FOLDER/$CURRENT_BRANCH" or die "Error reading commit files";
+		printf F "snapshot: $CURRENT_SNAPSHOT\n";
+		close F;
+
+		exit(0);
+	}
+
 }
 
 #This reads in the commit history file and displays it in order from newest to oldest (i.e reversed on how it's stored)
@@ -378,6 +397,71 @@ sub showLegit{
 	close F;
 
 
+}
+
+#Shows the status of all the files in the CWD, Index & Repo
+sub statusLegit{
+
+	#A hash that maps the names of all the files present with a code that determines their state:
+	#0 = Untracked, 1 = Added to Index, 2 = Same as repo, 3 = Changed, not staged
+	#4 = Changed, Staged, 5 = Different changes staged for commit
+	#6 = Deleted, #7 = File Deleted
+	my %allFiles = ();
+
+	#Get file names from the CWD
+	my @folderFiles = glob("*");
+	foreach my $file(@folderFiles){
+		if(!defined $allFiles{$file}){
+			printf "CWD: Adding $file to hash\n";
+			$allFiles{"$file"} = -1;
+		}
+	}
+
+	#Get file names from index
+	@folderFiles = glob("$ROOT_FOLDER/$INDEX_FOLDER/*");
+	foreach my $file(@folderFiles){
+		$file =~ /\/([a-zA-Z0-9_.\-]+)$/;
+		my $fileName = $1;
+		if(!defined $allFiles{$fileName}){
+			printf "Index: Adding $fileName to hash\n";
+			$allFiles{"$fileName"} = -1;
+		}
+	}
+
+	#Get file names from most recent snapshot
+	@folderFiles = glob("$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/*");
+	foreach my $file(@folderFiles){
+		$file =~ /\/([a-zA-Z0-9_.\-]+)$/;
+		my $fileName = $1;
+		if(!defined $allFiles{$fileName}){
+			printf "Snapshot: Adding $fileName to hash\n";
+			$allFiles{"$fileName"} = -1;
+		}
+	}
+
+	#For each file check conditions to check for its status
+	foreach my $file(keys %allFiles){
+		#Check for untracked
+		if((-e $file) && !(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file") && !(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
+			printf "$file is Untracked\n";
+			$allFiles{$file} = 0;
+		#Check for options 1-5
+		}elsif((-e $file && -e "$ROOT_FOLDER/$INDEX_FOLDER/$file"){
+			#Check for option 1 - added to index
+			if(!(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
+				printf "$file: Added to Index\n";
+				$allFiles{$file} = 1;
+			#Options 2-5
+			}else{
+				#Option 2 - Same as repo
+				if((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file") == 0) && compare("$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")==0){
+					printf "$file: Same as repo\n";
+					$allFiles{$file} = 2;
+				}
+			}
+
+		}
+	}
 }
 
 #Copies all files in the index to a new snapshot folder
