@@ -18,7 +18,7 @@ our $HEADS_FOLDER = "refs/heads";
 
 our $WORKING_DIRECTORY = getcwd();
 our $CURRENT_BRANCH;
-our $CURRENT_SNAPSHOT;
+our $CURRENT_SNAPSHOT = -1;
 
 our $MAX_COMMIT;
 our %COMMIT_HISTORY;
@@ -34,9 +34,10 @@ sub main{
 
 	my @args = @ARGV;
 
+	loadGlobals();
 	#Parse the command arguments and check they are valid
 	validateArguments(@ARGV);
-	loadGlobals();
+	
 
 	if($args[0] eq "init"){
 		initLegit(@args);
@@ -132,7 +133,10 @@ sub validateArguments{
 				exit(1);
 			}
 		}elsif($args[0] eq "status" && $#args == 0){
-			##Do Nothing##
+			if($CURRENT_SNAPSHOT eq -1){
+				printf "legit.pl: error: your repository does not have any commits yet\n";
+				exit(1);
+			}
 		}else{
 			print STDERR "legit.pl: error: unknown command $args[0]\n";
 			displayOptionsList();
@@ -201,7 +205,7 @@ sub addLegit{
 
 	#Copies each of the listed files into the index folder
 	foreach my $file(@files){
-		copy($file, ".legit/index/$file");
+		copy($file, "$ROOT_FOLDER/$INDEX_FOLDER/$file");
 	}
 }
 
@@ -412,7 +416,7 @@ sub statusLegit{
 	my @folderFiles = glob("*");
 	foreach my $file(@folderFiles){
 		if(!defined $allFiles{$file}){
-			printf "CWD: Adding $file to hash\n";
+			#printf "CWD: Adding $file to hash\n";
 			$allFiles{"$file"} = -1;
 		}
 	}
@@ -423,7 +427,7 @@ sub statusLegit{
 		$file =~ /\/([a-zA-Z0-9_.\-]+)$/;
 		my $fileName = $1;
 		if(!defined $allFiles{$fileName}){
-			printf "Index: Adding $fileName to hash\n";
+			#printf "Index: Adding $fileName to hash\n";
 			$allFiles{"$fileName"} = -1;
 		}
 	}
@@ -434,40 +438,51 @@ sub statusLegit{
 		$file =~ /\/([a-zA-Z0-9_.\-]+)$/;
 		my $fileName = $1;
 		if(!defined $allFiles{$fileName}){
-			printf "Snapshot: Adding $fileName to hash\n";
+			#printf "Snapshot: Adding $fileName to hash\n";
 			$allFiles{"$fileName"} = -1;
 		}
 	}
 
 	#For each file check conditions to check for its status
-	foreach my $file(keys %allFiles){
-		#Check for untracked
-		if((-e $file) && !(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file") && !(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
-			printf "$file is Untracked\n";
+	foreach my $file(sort keys %allFiles){
+		#Check for untracked files
+		if((-e $file) && !(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+			printf "$file - untracked\n";
 			$allFiles{$file} = 0;
-		#Check for options 1-5
-		}elsif(-e $file && -e "$ROOT_FOLDER/$INDEX_FOLDER/$file"){
-			#Check for option 1 - added to index
-			if(!(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
-				printf "$file: Added to Index\n";
-				$allFiles{$file} = 1;
+		}
+		#Option 1 - File exists in index but not in snapshot
+		if((-e "$ROOT_FOLDER/$INDEX_FOLDER/$file") && !(-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
+			printf "$file - added to index\n";
+			$allFiles{$file} = 1;
+		}
+		#Check for options 2-5
+		if((-e $file) && (-e "$ROOT_FOLDER/$INDEX_FOLDER/$file") && (-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")){
 			#Options 2-5
-			}else{
-				#Option 2 - Same as repo
-				if((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file") == 0) && compare("$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")==0){
-					printf "$file: Same as repo\n";
-					$allFiles{$file} = 2;
-				#Option 3 - Changed, not staged (CWD file is different to index, but index hasn't changed from last commit)
-				}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")!=0) && (compare("$file", "ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
-					printf "$file: changed but not staged\n";
-					$allFiles{$file} = 3;
-				#Option 4 - Changed and Staged
-				}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")==0) && (compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
-					printf "$file: changed and staged\n";
-					$allFiles{$file} = 4;
-				}
+			#Option 2 - Same as repo
+			if((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file") == 0) && compare("$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")==0){
+				printf "$file - same as repo\n";
+				$allFiles{$file} = 2;
+			#Option 3 - Changed, not staged (CWD file is different to index, but index hasn't changed from last commit)
+			}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")!=0) && (compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")==0)){
+				printf "$file - file changed, changes not staged for commit\n";
+				$allFiles{$file} = 3;
+			#Option 4 - Changed and Staged
+			}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")==0) && (compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
+				printf "$file - file changed, changes staged for commit\n";
+				$allFiles{$file} = 4;
+			#Option 5 - Different changes staged for commit
+			}elsif((compare("$file", "$ROOT_FOLDER/$INDEX_FOLDER/$file")!=0) && (compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file")!=0)){
+				printf "$file - file changed, different changes staged for commit\n";
+				$allFiles{$file} = 5;
 			}
-
+		#Option 6 - File deleted from both index and CWD
+		}elsif((-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") && !(-e "$file") && !(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+			printf "$file - deleted";
+			$allFiles{$file} = 6;
+		#Option 7 - file delted from CWD only
+		}elsif(!(-e "$file") && (-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") && (-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+			printf "$file - deleted";
+			$allFiles{$file} = 7;
 		}
 	}
 }
@@ -486,6 +501,7 @@ sub createSnapshot{
 		$fileName = $1;
 		copy($file, "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$fileName");
 	}
+	
 }
 
 #At the load of the program initialise all the global variables to store data like current branch, current max commit, current snapshot
@@ -569,4 +585,35 @@ sub commitCheckIndexFiles{
 
 	return 0;
 	
+}
+
+#My own function to copy files
+sub copy_file{
+	(my $oldFile, my $newFile) = @_;
+
+	open OLD, "<", "$oldFile" or die "Cannot open $oldFile";
+	open NEW, ">", "$newFile" or die "Cannot open $newFile";
+
+	while(my $line = <OLD>){
+		printf NEW "$line";
+	}
+
+	close OLD;
+	close NEW;
+}
+
+#My own function to compare 2 files
+sub compare_file{
+	(my $file1, my $file2) = @_;
+
+	open F1, "<", "$file1" or die "Cannot open $file1";
+	open F2, "<", "$file2" or die "Cannot open $file2";
+
+	my @fileText1 = <F1>;
+	my @fileText2 = <F2>;
+
+	printf "F1 Size: $#fileText1, F2 Size: $#fileText2\n";
+
+	return 1;
+
 }
