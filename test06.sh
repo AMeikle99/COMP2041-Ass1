@@ -17,7 +17,7 @@ seq 21 30 > 30.txt
 
 ./legit.pl add 10.txt 20.txt 30.txt
 
-./legit.pl commit -m "initial" 2>&1
+./legit.pl commit -m "initial" > /dev/null 2>&1
 
 echo 11 >> 10.txt;
 echo 21 >> 20.txt;
