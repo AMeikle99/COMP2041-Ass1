@@ -59,6 +59,28 @@ sub main{
 			showLegit(@args);
 		}elsif($args[0] eq "status"){
 			statusLegit();
+		}elsif($args[0] eq "rm"){
+			shift @args;
+			#Check for additional parameters for the rm command
+			#Pass 1 or 0 as a sort of boolean indicator
+			my $isForce = 0;
+			my $isCached = 0;
+			if($args[0] eq "--force"){
+				$isForce = 1;
+				shift @args;
+				if($args[0] eq "--cached"){
+					$isCached = 1;
+					shift @args;
+				}
+			}elsif($args[0] eq "--cached"){
+				$isCached = 1;
+				shift @args;
+				if($args[0] eq "--force"){
+					$isForce = 1;
+					shift @args;
+				}
+			}
+			rmLegit($isCached, $isForce, @args);
 		}
 	}
 
@@ -133,6 +155,11 @@ sub validateArguments{
 				exit(1);
 			}
 		}elsif($args[0] eq "status" && $#args == 0){
+			if($CURRENT_SNAPSHOT eq -1){
+				printf "legit.pl: error: your repository does not have any commits yet\n";
+				exit(1);
+			}
+		}elsif($args[0] eq "rm"){
 			if($CURRENT_SNAPSHOT eq -1){
 				printf "legit.pl: error: your repository does not have any commits yet\n";
 				exit(1);
@@ -484,6 +511,40 @@ sub statusLegit{
 			printf "$file - deleted";
 			$allFiles{$file} = 7;
 		}
+	}
+}
+
+sub rmLegit{
+	(my $isCached, my $isForce, my @files) = @_;
+
+	if($isCached == 1){
+		foreach my $file(@files){
+			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
+		}
+	}elsif($isForce == 1){
+		foreach my $file(@files){
+			unlink $file;
+			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
+		}
+	}else{
+		foreach my $file(@files){
+			if(!(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+				printf STDERR "legit.pl: error: '$file' is not in the legit repository\n";
+				exit(1);
+			}elsif(compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") != 0){
+				printf STDERR "legit.pl: error: '$file' has changes staged in the index\n";
+				exit(1);
+			}elsif(compare($file, "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") != 0){
+				printf STDERR "legit.pl: error: '$file' in repository is different to working file\n";
+				exit(1);
+			}
+		}
+
+		foreach my $file(@files){
+			unlink $file;
+			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
+		}
+		
 	}
 }
 
