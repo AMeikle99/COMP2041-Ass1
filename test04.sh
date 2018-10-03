@@ -24,13 +24,24 @@ else
 	echo "${red}Failed - Commit Several Files${reset}"
 	exit 1
 fi
+#Show - Non Existent Branch & Real File
 
-#Check Log after 1 commit
-output=$(perl legit.pl log 2>&1)
-if [[ $output == "0 initial" ]]
+output=$(perl legit.pl show 1:10.txt 2>&1)
+if [[ $output == "legit.pl: error: unknown commit '1'" ]]
 then
-	echo "${green}Successful - Check Log after 1 commit${reset}"
+	echo "${green}Successful - Show Non Existent Branch & Real File${reset}"
 else
-	echo "${red}Failed - Check Log after 1 commit${reset}"
+	echo "${red}Failed - Show Non Existent Branch & Real File${reset}"
+	exit 1
+fi
+
+#Show - Real Branch & Real File
+
+output=$(perl legit.pl show 0:10.txt 2>&1)
+if [[ $? == 0 ]]
+then
+	echo "${green}Successful - Show Real Branch & Real File${reset}"
+else
+	echo "${red}Failed - Show Real Branch & Real File${reset}"
 	exit 1
 fi
