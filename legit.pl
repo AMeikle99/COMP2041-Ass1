@@ -118,7 +118,7 @@ sub validateArguments{
 					}elsif($file =~ /^-/){
 						printf STDERR "Usage: legit.pl <filenames>\n";
 						exit(1);
-					}elsif(!(-f $file)){
+					}elsif(!(-f $file) && !(-f "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
 						printf STDERR "legit.pl: error: can not open '$file'\n";
 						exit(1);
 					}
