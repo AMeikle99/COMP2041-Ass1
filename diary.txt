@@ -33,3 +33,9 @@ End: 01:30
 Activity: Coding - Subset 1 (Status)
 Comments: I initially spent 40 mins trying to debug an issue with my Status function, whereby the comparison of two files would keep failing. After writing my own version of a compare function, to check if the one I was using may be faulty, I noticed the reason it was failing was due to my omission of a '$' in the variable name holding my directory path. After this was resolved I managed to implement the status for deleted files. I made sure to observe the output of the Reference Implementation to ensure I matched what would be expected.
 ##################
+Date: 03/10/2018
+Start: 21:00
+End: 23:50
+Activity: Coding - Subset 1 (rm)
+Comments: I spent the remaining time I had on the project completing the rm functionality. I found this tedious as it took time to work out the exact outputs produced by the reference implementation. After much trial and error I managed to produce a working copy. I also spent this time completing a few remaining test??.sh files to be submitted alongside the legit.pl file
+##################

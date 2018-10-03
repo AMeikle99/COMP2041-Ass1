@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Test 3 - Testing Commit, Log & Show
+#Test 3 - Testing Commit
 red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
@@ -45,15 +45,6 @@ else
 	exit 1
 fi
 
-#Check Log after 1 commit
-output=$(perl legit.pl log 2>&1)
-if [[ $output == "0 initial" ]]
-then
-	echo "${green}Successful - Check Log after 1 commit${reset}"
-else
-	echo "${red}Failed - Check Log after 1 commit${reset}"
-	exit 1
-fi
 
 #Commit - No change to current index
 ./legit.pl add 10.txt 20.txt
@@ -67,26 +58,6 @@ else
 	exit 1
 fi
 
-#Show - Non Existent Branch & Real File
 
-output=$(perl legit.pl show 1:10.txt 2>&1)
-if [[ $output == "legit.pl: error: unknown commit '1'" ]]
-then
-	echo "${green}Successful - Show Non Existent Branch & Real File${reset}"
-else
-	echo "${red}Failed - Show Non Existent Branch & Real File${reset}"
-	exit 1
-fi
-
-#Show - Real Branch & Real File
-
-output=$(perl legit.pl show 0:10.txt 2>&1)
-if [[ $? == 0 ]]
-then
-	echo "${green}Successful - Show Real Branch & Real File${reset}"
-else
-	echo "${red}Failed - Show Real Branch & Real File${reset}"
-	exit 1
-fi
 
 

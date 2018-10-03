@@ -517,13 +517,13 @@ sub statusLegit{
 sub rmLegit{
 	(my $isCached, my $isForce, my @files) = @_;
 
-	if($isCached == 1){
+	if($isCached == 1 && $isForce == 0){
 		foreach my $file(@files){
 			if(compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") != 0 && (compare($file, "$ROOT_FOLDER/$INDEX_FOLDER/$file") != 0)){
 				printf STDERR "legit.pl: error: '$file' in index is different to both working file and repository\n";
 				exit(1);
 			}
-			
+
 			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
 		}
 	}elsif($isForce == 1){
