@@ -532,7 +532,7 @@ sub rmLegit{
 				printf STDERR "legit.pl: error: '$file' is not in the legit repository\n";
 				exit(1);
 			}elsif(compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") != 0 && (compare($file, "$ROOT_FOLDER/$INDEX_FOLDER/$file") != 0)){
-				printf STDERR "legit.pl: error: '$file' in index is different to both working file and repository\n"
+				printf STDERR "legit.pl: error: '$file' in index is different to both working file and repository\n";
 				exit(1);
 			}elsif(compare("$ROOT_FOLDER/$INDEX_FOLDER/$file", "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") != 0){
 				printf STDERR "legit.pl: error: '$file' has changes staged in the index\n";
