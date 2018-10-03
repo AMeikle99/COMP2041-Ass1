@@ -232,7 +232,11 @@ sub addLegit{
 
 	#Copies each of the listed files into the index folder
 	foreach my $file(@files){
-		copy($file, "$ROOT_FOLDER/$INDEX_FOLDER/$file");
+		if(!(-e $file) && (-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
+		}else{
+			copy($file, "$ROOT_FOLDER/$INDEX_FOLDER/$file");
+		}
 	}
 }
 
