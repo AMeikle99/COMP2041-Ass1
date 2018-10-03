@@ -538,11 +538,23 @@ sub rmLegit{
 		#If force was an option then delete without checking
 		}else{
 			foreach my $file(@files){
+				if(!(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+					printf STDERR "legit.pl: error: '$file' is not in the legit repository\n";
+					exit(1);
+				}
 				unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
 			}
 		}
 	#If force was an option, delet all specified files
 	}elsif($isForce == 1){
+		#Check that the files all exist first
+		foreach my $file(@files){
+			if(!(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
+				printf STDERR "legit.pl: error: '$file' is not in the legit repository\n";
+				exit(1);
+			}
+		}
+
 		foreach my $file(@files){
 			unlink $file;
 			unlink "$ROOT_FOLDER/$INDEX_FOLDER/$file";
