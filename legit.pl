@@ -504,11 +504,11 @@ sub statusLegit{
 			}
 		#Option 6 - File deleted from both index and CWD
 		}elsif((-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") && !(-e "$file") && !(-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
-			printf "$file - deleted";
+			printf "$file - deleted\n";
 			$allFiles{$file} = 6;
 		#Option 7 - file delted from CWD only
 		}elsif(!(-e "$file") && (-e "$ROOT_FOLDER/$SNAPSHOT_FOLDER/$CURRENT_SNAPSHOT/$file") && (-e "$ROOT_FOLDER/$INDEX_FOLDER/$file")){
-			printf "$file - deleted";
+			printf "$file - file deleted\n";
 			$allFiles{$file} = 7;
 		}
 	}
